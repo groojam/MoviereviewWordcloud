@@ -1,0 +1,24 @@
+<html>
+
+    영화 검색
+    <form action="{% url 'movie:api_search' %}" method="GET">
+        <input type="text" name="q" placeholder="검색">
+        <input type="submit" value="검색">
+    </form>
+
+워드 클라우드가 저장된 영화 목록
+
+{% for item in dataList %}
+<ul>
+    <div>
+        <form action="{% url 'moive:showimage' %}" method="GET">
+            <input type="hidden" name="movieid" value="{{item.mvId}}">
+            <input type="image" src="{{item.mvPoster}}"> {{ item.mvName|safe }}
+        </form>
+    </div>
+</ul>
+    
+{% endfor %}
+
+
+</html>

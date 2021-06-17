@@ -1,0 +1,50 @@
+<html>
+
+    <!-- <script type="text/javascript">  
+        let url = location.href;
+        console.log(url);
+        let queryString = location.search;
+        console.log(queryString);
+       function getParamMap(queryString){
+        let sp1 = queryString.replace("?", "").slice(-6);
+        let splited = sp1.replace("=","").slice(-6);
+        console.log(splited);
+        return splited;
+       }
+    </script>   -->
+      
+
+<body>
+    <div>
+        <h2>선택영화</h2>
+        <img src="{{items.image}}" alt="" width="110" height="150">: {{ items.title|safe }} ( {{items.pubDate}} ) 감독: {{ items.director }} 주연: {{ items.actor }} 평점 : {{ items.userRating }}
+    </div>
+
+    <form name="movieform" action="{% url 'movie:moviecrawler' %}" method="GET">
+        <input type="hidden" name="mvinfo[]" value="{{items.mvId}}">
+        <input type="hidden" name="mvinfo[]" value="{{items.image}}">
+        <input type="hidden" name="mvinfo[]" value="{{items.title|safe}}">
+        <input type="hidden" name="mvinfo[]" value="{{items.pubDate}}">
+        <input type="hidden" name="mvinfo[]" value="{{items.director}}">
+        <input type="hidden" name="mvinfo[]" value="{{items.actor}}">
+        <input type="hidden" name="mvinfo[]" value="{{items.userRating}}">
+        <input type="submit" value="크롤링 시작">
+    </form>
+
+    <!-- <script type="text/javascript">  
+        var paramObj = getParamMap(queryString);
+        console.log(paramObj);
+        
+        document.getElementsByName("movieid")[0].setAttribute("value", paramObj);
+
+        console.log(document.getElementsByName("movieid")[0].value);
+    </script>   -->
+    
+</body>
+
+
+
+
+
+
+</html>

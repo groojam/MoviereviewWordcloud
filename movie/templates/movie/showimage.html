@@ -1,0 +1,11 @@
+<html>
+
+{% for item in mvinfoList %}
+    {{item.mvcloud}}
+    {{item.mvPoster}} {{item.mvName | safe}} ( {{item.mvYear}} )
+
+{% endfor %}
+
+
+
+</html>

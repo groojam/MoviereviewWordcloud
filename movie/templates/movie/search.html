@@ -1,0 +1,28 @@
+<html>
+
+<h1> 네이버 영화 검색 </h1>
+
+  <form action="{% url 'movie:api_search' %}" method="GET">
+      <input type="text" name="q" placeholder="검색">
+      <input type="submit" value="검색">
+  </form>
+  <div>
+  {% for item in items %}
+      <ul>
+          <form action="{% url 'movie:movieselect' %}" method="GET">
+          <div>{{ forloop.counter }}
+            <input type="hidden" name="mvinfo[]" value="{{item.image}}">
+            <input type="hidden" name="mvinfo[]" value="{{item.title|safe}}">
+            <input type="hidden" name="mvinfo[]" value="{{item.pubDate}}">
+            <input type="hidden" name="mvinfo[]" value="{{item.director}}">
+            <input type="hidden" name="mvinfo[]" value="{{item.actor}}">
+            <input type="hidden" name="mvinfo[]" value="{{item.userRating}}">
+            <input type='hidden' name="mvinfo[]" value="{{item.link}}">
+            <input type="image" src="{{item.image}}"> {{ item.title|safe }} ( {{item.pubDate}} ) 감독: {{ item.director }} 주연: {{ item.actor }} 평점 : {{ item.userRating }}
+          </div>
+          </form>
+      </ul>
+  {% endfor %}
+  </div>
+
+  </html>
