@@ -25,6 +25,8 @@ import webbrowser
 from konlpy.tag import Okt
 from collections import Counter
 
+from wordcloud import WordCloud
+
 from io import BytesIO
 import cv2
 import numpy as np
@@ -153,11 +155,15 @@ def crawler(request):
         now = datetime.datetime.today()
         nowDateTime = now.strftime('%Y-%m-%d %H:%M:%S')
 
-        SaveDir = os.path.dirname(os.path.abspath(__file__))
+        SaveDir = os.getcwd()
         #크롤링 데이터 저장 위치.
-        saveLocation = "/media/crawldata/" + movieid + ".csv"
+        saveLocation = "/movie/media/crawldata/" + movieid + ".csv"
 
-        csvPath = os.path.join(SaveDir, saveLocation)
+        print(SaveDir)
+
+        csvPath = SaveDir + saveLocation
+
+        print(csvPath)
 
         # 이미지 url저장, 불러오기 or 이미지를 db에 저장, 불러오기.
         Movie(mvId = movieid, mvPoster = image, mvName = mvinfo[1], mvYear = mvinfo[2]).save
@@ -236,29 +242,36 @@ def cloud(request):
     if request.method == 'GET':
         movieid = request.GET.get('movieid')
 
-        SaveDir = os.path.dirname(os.path.abspath(__file__))
+        SaveDir = os.getcwd()
         #크롤링 데이터 저장 위치.
-        saveLocation = "/media/crawldata/" + movieid + ".csv"
+        saveLocation = "/movie/media/crawldata/" + movieid + ".csv"
 
-        csvPath = os.path.join(SaveDir, saveLocation)
 
-        imgSaveLocation = "/media/cloudimg/" + movieid + ".png"
+        csvPath = SaveDir + saveLocation
 
-        imgPath = os.path.join(SaveDir, imgSaveLocation)
+        imgSaveLocation = "/moive/media/cloudimg/" + movieid + ".png"
+
+        imgPath = SaveDir + imgSaveLocation
+
+        #fontPath = ""
+
+        print(csvPath)
+        print(imgPath)
     # 입력변수- text : 댓글, ntags : 표시할 단어수, multiplier : 크기가중치
-        def get_tags(text, ntags=30):
+        def get_tags(text, ntags=100):
             t = Okt()
             nouns = []
 
         # 모든 댓글에서 명사만 추출하고 nouns변수에 누적해 저장함
             for sentence in text:
                 for noun in t.nouns(sentence):
-                    nouns.append(noun)
+                    if len(noun) >=2 :
+                        nouns.append(noun)
                     # 각 명사별로 빈도계산
                     count = Counter(nouns)
             # n : 명사, c : 빈도
             tags = count.most_common(ntags)
-            return pytagcloud.make_tags(tags, maxsize=80)
+            return tags
             #[{'color': color(),'tag':n,'size':c} for n,c in count.most_common(ntags)]
 
         # draw_cloud 새함수 만듦:
@@ -268,11 +281,20 @@ def cloud(request):
 
         # 입력변수 tags : get_tags()에서 리턴되는 color, tag, size(이미지크기) 값이 전달됨.
         # fontname : Noto Sans CJK - 한글폰트
-        def draw_cloud(tags, filename, fontname = 'Nanum Gothic',size1 = (1300,800)):
-            cloud = pytagcloud.create_tag_image(tags,filename,fontname=fontname,size=size1, rectangular=False)
-            # 저장된 단어구름 이미지파일(wc1.png)을 내 컴퓨터에 띄움
-            #webbrowser.open(filename)
-            return cloud
+
+        def draw_cldimg(tags, filename):
+            wordcld = WordCloud(font_path='/usr/share/fonts/truetype/SeoulHangangM.ttf', background_color='white', width='1000', height='1000', max_words='100', max_font_size='300')
+            wordcld.generate_from_frequencies(dict(tags))
+            wordcld.to_file(filename)
+
+            return wordcld
+
+
+        # def draw_cloud(tags, filename, fontname = 'Nanum Gothic',size1 = (1300,800)):
+        #     cloud = pytagcloud.create_tag_image(tags,filename,fontname=fontname,size=size1, rectangular=False)
+        #     # 저장된 단어구름 이미지파일(wc1.png)을 내 컴퓨터에 띄움
+        #     #webbrowser.open(filename)
+        #     return cloud
         ####################################################
         # 명사에 적용할 색상 랜덤지정
         r = lambda: random.randint(0, 255)
@@ -293,12 +315,12 @@ def cloud(request):
         tags = get_tags(reviews)
         #print(tags)
         # 관심명사 단어구름 이미지 파일 저장 및 출력하기
-        cloudimg = draw_cloud(tags, imgPath)
+        cloudimg = draw_cldimg(tags, imgPath)
         
         #생성된 클라우드 이미지 db에 저장.
-        mvData = Movie.objects.get(mvId=movieid)
-        mvData.mvCloud = cloudimg
-        mvData.save()
+        #mvData = Movie.objects.get(mvId=movieid)
+        #mvData.mvCloud = cloudimg
+        #mvData.save()
         
         context = { 'cloudimg' : cloudimg, 'movieid' : movieid}
         return render(request, 'movie/cloud.html', context=context)
@@ -309,14 +331,14 @@ def showImage(request):
 
     mvid = request.GET.get('movieid')
     # 포스터 이미지
-    SaveDir = os.path.dirname(os.path.abspath(__file__))
+    SaveDir = os.getcwd()
 
-    posterPath = "/media/poster/" + mvid + ".jpg"
+    posterPath = "moive/media/poster/" + mvid + ".jpg"
     # 클라우드 이미지
-    cldPath = "/media/cloudimg/" + mvid + ".png"
+    cldPath = "moive/media/cloudimg/" + mvid + ".png"
 
-    posterimgPath = os.path.join(SaveDir, posterPath)
-    cldimgPath = os.path.join(SaveDir, cldPath)
+    posterimgPath = SaveDir + posterPath
+    cldimgPath = SaveDir + cldPath
 
     mvData = Movie.objects.get(mvId=mvid)
     
