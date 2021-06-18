@@ -82,8 +82,8 @@
 <main>
 
     <figure class="figure"> 
-        <img id="cldimg" src="{% get_static_prefix %}{{cloudimg}}" />
-        <figcaption class="figure-caption">{{ mvData.mvName|safe }} ( {{mvData.mv_create}} )</figcaption>
+        <img id="cldimg" src="{% get_static_prefix %}{{mvData.cldImgPath}}" />
+        <figcaption class="figure-caption">{{ mvData.mvName|safe }} ( {{mvData.mv_createdate}} )</figcaption>
     </figure>
 
 
