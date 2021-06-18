@@ -1,3 +1,6 @@
+from types import ClassMethodDescriptorType
+
+from django.http.response import HttpResponseRedirect
 from config.settings import STATICFILES_DIR
 import movie
 from django.shortcuts import render
@@ -34,6 +37,8 @@ import numpy as np
 from tqdm import tqdm
 from tqdm import trange
 
+import re
+
 
 
 
@@ -55,7 +60,12 @@ class index(generic.ListView):
         return render(request, self.template_name, self.content)
 
 def home(request):
-    pass
+
+    mvDataInstance = Movie.objects.all()
+
+    mvData = Movie.objects
+
+    return render(request, 'movie/home.html', context = {'mvData' :mvData})
 
 
 def search(request):
@@ -64,35 +74,40 @@ def search(request):
 
 
         q = request.GET.get('q')
-        encText = urllib.parse.quote("{}".format(q))
-        url = "https://openapi.naver.com/v1/search/movie?query=" + encText  # json 결과
-        movie_api_request = urllib.request.Request(url)
-        movie_api_request.add_header("X-Naver-Client-Id", "tEzvl3Zbb_YdGSpp7hYv")
-        movie_api_request.add_header("X-Naver-Client-Secret", "r3fyE410yt")
-        response = urllib.request.urlopen(movie_api_request)
-        rescode = response.getcode()
-        if (rescode == 200):
-            response_body = response.read()
-            result = json.loads(response_body.decode('utf-8'))
-            items = result.get('items')
-            print(result)
+        print(type(q))
+        print(q)
+        if q is None:
+            context = {}
+        else:
+            encText = urllib.parse.quote("{}".format(q))
+            url = "https://openapi.naver.com/v1/search/movie?query=" + encText  # json 결과
+            movie_api_request = urllib.request.Request(url)
+            movie_api_request.add_header("X-Naver-Client-Id", "tEzvl3Zbb_YdGSpp7hYv")
+            movie_api_request.add_header("X-Naver-Client-Secret", "r3fyE410yt")
+            response = urllib.request.urlopen(movie_api_request)
+            rescode = response.getcode()
+            if (rescode == 200):
+                response_body = response.read()
+                result = json.loads(response_body.decode('utf-8'))
+                items = result.get('items')
+                #print(result)
 
-            # mvID = items.link
-            # print(mvID)
+                # mvID = items.link
+                # print(mvID)
 
-            # movie = Movie()
-            # movie.Id = items.id
-            # movie.Poster = items.image
-            # movie.Name = items.title
-            # movie.Year = items.pubDate
-            # movie.save()
+                # movie = Movie()
+                # movie.Id = items.id
+                # movie.Poster = items.image
+                # movie.Name = items.title
+                # movie.Year = items.pubDate
+                # movie.save()
 
-            
-            context = {
-                'items': items
-            }
                 
-            return render(request, 'movie/search.html', context=context)
+                context = {
+                    'items': items
+                }
+                
+        return render(request, 'movie/search.html', context=context)
 
 
 def selector(request):
@@ -121,7 +136,7 @@ def selector(request):
             'items' : items
         }
 
-
+        print(context)
         return render(request, 'movie/select.html', context = context)
 
 
@@ -133,21 +148,31 @@ def crawler(request):
 
         #print(mvinfo)
         #포스터 이미지 저장.
+
+        #0: id, 1: poster, 2: title, 3: pubdate, 4: director, 5: actor, 6:userRating
         movieid = mvinfo[0]
         mvImgUrl = mvinfo[1]
+        # title = "".join(c for c in mvinfo[2] if c.isalnum())
+        title = mvinfo[2]
+        Dir = os.getcwd()
+        SaveDir = Dir.replace("\\", "/")
 
+        # del mvinfo[2]
+        # mvinfo.insert(2, title)
 
 
         # tempImg = BytesIO()
         # tempImg.write(mvImgUrl)
         # tempImg.seek(0)
-        #imgSavePath = "./media/poster/" + movieid + ".jpg"
+        imgSavePath = SaveDir + "/movie/static/poster/" + movieid + ".jpg"
         #print(imgSavePath)
-        #poster = urllib.request.urlretrieve(mvImgUrl, imgSavePath)
+        urllib.request.urlretrieve(mvImgUrl, imgSavePath)
+        #poster = urllib.request.urlretrieve(mvImgUrl)
+        
 
-        resp = urllib.request.urlopen(mvImgUrl)
-        image = np.asarray(bytearray(resp.read()), dtype='uint8')
-        image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+        #image = urllib.request.urlretrieve(mvImgUrl, )
+        #image = np.asarray(bytearray(resp.read()), dtype='uint8')
+        #image = cv2.imdecode(image, cv2.IMREAD_COLOR)
 
         #포스터 이미지 불러오기.
         #res = request.urlopen(mvImgUrl).read()
@@ -155,18 +180,19 @@ def crawler(request):
         now = datetime.datetime.today()
         nowDateTime = now.strftime('%Y-%m-%d %H:%M:%S')
 
-        SaveDir = os.getcwd()
+        
         #크롤링 데이터 저장 위치.
-        saveLocation = "/movie/media/crawldata/" + movieid + ".csv"
+        saveLocation = "/movie/static/crawldata/" + movieid + ".csv"
 
         print(SaveDir)
 
+        
         csvPath = SaveDir + saveLocation
 
         print(csvPath)
 
         # 이미지 url저장, 불러오기 or 이미지를 db에 저장, 불러오기.
-        Movie(mvId = movieid, mvPoster = image, mvName = mvinfo[1], mvYear = mvinfo[2]).save
+        
 
         test_url = "https://movie.naver.com/movie/bi/mi/pointWriteFormList.nhn?code=" + movieid + "&type=after"
         resp = requests.get(test_url)
@@ -227,8 +253,19 @@ def crawler(request):
             print('url: "' + url + '" is parsing....')
             get_data(url)
 
-        context = {'movieid' : movieid}
-    return render(request, 'movie/crawler.html', context=context)
+        #range 활용하여 마지막 페이지 수 저장.
+
+        Movie(mvId = movieid, mvPoster = imgSavePath, mvName = title, mvYear = mvinfo[3], mvLocation = csvPath).save()
+    
+
+        keylist = ['image', 'title', 'pubDate', 'director', 'actor', 'userRating', 'mvId']
+        items = dict(zip(keylist, mvinfo))
+
+        #idDict = dict(movieid=movieid)
+
+        context = {'movieid' : movieid, 'items':items}
+        print(context)
+        return render(request, 'movie/crawler.html', context=context)
 
 
 def cloud(request):
@@ -240,38 +277,69 @@ def cloud(request):
     #        (색상'color', 단어'tag', 크기'size')부여
 
     if request.method == 'GET':
-        movieid = request.GET.get('movieid')
+        mvinfo = request.GET.getlist('mvinfo[]')
+        movieid = request.GET.get('mvid')
 
-        SaveDir = os.getcwd()
+        print(type(movieid))
+        print(movieid)
+
+        Dir = os.getcwd()
+        SaveDir = Dir.replace("\\", "/")
         #크롤링 데이터 저장 위치.
-        saveLocation = "/movie/media/crawldata/" + movieid + ".csv"
+        saveLocation = "/movie/static/crawldata/" + movieid + ".csv"
 
 
         csvPath = SaveDir + saveLocation
 
-        imgSaveLocation = "/moive/media/cloudimg/" + movieid + ".png"
+        imgSaveLocation = "/movie/static/cloudimg/" + movieid + ".png"
 
         imgPath = SaveDir + imgSaveLocation
 
-        #fontPath = ""
+        cldImgPath = "cloudimg/" + movieid + ".png"
+
+        posterPath = "poster/" + movieid + ".jpg"
+
+        stopTxtPath = SaveDir + "/stopWords.txt"
+
+        swordList = []
+
+        with open(stopTxtPath, 'r', encoding='utf-8') as stoptxt:
+            for line in stoptxt.readlines():
+                swordList.append(line.rstrip())
+
+        #fontPath = "/usr/share/fonts/truetype/SeoulHangangM.ttf"
 
         print(csvPath)
         print(imgPath)
     # 입력변수- text : 댓글, ntags : 표시할 단어수, multiplier : 크기가중치
-        def get_tags(text, ntags=100):
-            t = Okt()
+        def get_tags(text, ntags=200):
+            okt = Okt()
             nouns = []
 
         # 모든 댓글에서 명사만 추출하고 nouns변수에 누적해 저장함
             for sentence in text:
-                for noun in t.nouns(sentence):
+                for noun in okt.nouns(sentence):
                     if len(noun) >=2 :
-                        nouns.append(noun)
+                        if noun in swordList:
+                            continue
+                        else:
+                            nouns.append(noun)
                     # 각 명사별로 빈도계산
-                    count = Counter(nouns)
+                            count = Counter(nouns)
             # n : 명사, c : 빈도
-            tags = count.most_common(ntags)
-            return tags
+
+            wordTags = dict()
+            for tags, counts in count.most_common(ntags):
+                if (len(str(tags)) > 1):
+                    wordTags[tags] = int(counts)
+            #tags = count.most_common(ntags)
+
+            #for key, value in wordTags.items():
+                #print (key, value)
+
+
+
+            return wordTags
             #[{'color': color(),'tag':n,'size':c} for n,c in count.most_common(ntags)]
 
         # draw_cloud 새함수 만듦:
@@ -280,11 +348,13 @@ def cloud(request):
         # 기능 3. 화면에 단어구름을 표시함
 
         # 입력변수 tags : get_tags()에서 리턴되는 color, tag, size(이미지크기) 값이 전달됨.
-        # fontname : Noto Sans CJK - 한글폰트
+        
 
-        def draw_cldimg(tags, filename):
-            wordcld = WordCloud(font_path='/usr/share/fonts/truetype/SeoulHangangM.ttf', background_color='white', width='1000', height='1000', max_words='100', max_font_size='300')
-            wordcld.generate_from_frequencies(dict(tags))
+        def draw_cldimg(gettags, filename):
+            wordcld = WordCloud(font_path='C:\Windows\Fonts\malgun.ttf', background_color='white', width=1000, height=1000, max_words=300, max_font_size=200)
+           
+           
+            wordcld.generate_from_frequencies(gettags)
             wordcld.to_file(filename)
 
             return wordcld
@@ -297,32 +367,44 @@ def cloud(request):
         #     return cloud
         ####################################################
         # 명사에 적용할 색상 랜덤지정
-        r = lambda: random.randint(0, 255)
-        color = lambda: (r(), r(), r())
+        #r = lambda: random.randint(0, 255)
+        #color = lambda: (r(), r(), r())
 
-        # 옥자 댓글(okja1.txt) 읽기 전용으로 읽어들임.
+        # 읽기 전용으로 읽어들임.
         reviews = []
         
         file = open(csvPath, 'r', encoding ='utf-8')
         lines = file.readlines()
 
         for line in lines:
-            reviews.append(line)
+            filterd = line.replace('.', '').replace(',','').replace("'","").replace('·', ' ').replace('=','').replace('\n','')
+            reviews.append(filterd)
         file.close()
 
     ####################################################
     # 댓글 명사추출 및 빈도분석(get_tags) 실시
-        tags = get_tags(reviews)
+    
+        wtags = get_tags(reviews)
         #print(tags)
         # 관심명사 단어구름 이미지 파일 저장 및 출력하기
-        cloudimg = draw_cldimg(tags, imgPath)
+        cloudimg = draw_cldimg(wtags, imgPath)
+        #print(cloudimg)
         
         #생성된 클라우드 이미지 db에 저장.
-        #mvData = Movie.objects.get(mvId=movieid)
-        #mvData.mvCloud = cloudimg
-        #mvData.save()
-        
-        context = { 'cloudimg' : cloudimg, 'movieid' : movieid}
+        mvInstance = Movie.objects.get(mvId=movieid)
+        if mvInstance:
+            mvInstance.mvcloud = imgPath
+            mvInstance.cldImgPath = cldImgPath
+            mvInstance.pstImgPath = posterPath
+            mvInstance.save()
+
+        #cldImgDict = dict(cloudimg=cloudimg)
+        #idDict = dict(movieid=movieid)
+
+        keylist = ['mvId','image', 'title', 'pubDate', 'director', 'actor', 'userRating']
+        items = dict(zip(keylist, mvinfo))
+
+        context = { 'cloudimg' : cldImgPath, 'items' : items}
         return render(request, 'movie/cloud.html', context=context)
 
 def showImage(request):
@@ -331,11 +413,11 @@ def showImage(request):
 
     mvid = request.GET.get('movieid')
     # 포스터 이미지
-    SaveDir = os.getcwd()
-
-    posterPath = "moive/media/poster/" + mvid + ".jpg"
+    Dir = os.getcwd()
+    SaveDir = Dir.replace("\\", "/")
+    posterPath = "/movie/static/poster/" + mvid + ".jpg"
     # 클라우드 이미지
-    cldPath = "moive/media/cloudimg/" + mvid + ".png"
+    cldPath = "/movie/static/cloudimg/" + mvid + ".png"
 
     posterimgPath = SaveDir + posterPath
     cldimgPath = SaveDir + cldPath
@@ -344,10 +426,8 @@ def showImage(request):
     
     mvinfoList = []
 
-    for i in mvData:
-        mvinfoList[i] = mvData[i]
-
-    context = { 'mvinfoList' : mvinfoList, 'poster': posterimgPath, 'cloud': cldimgPath}
+    
+    context = {'cloudimg': cldimgPath, 'mvData' : mvData}
 
     return render(request, 'movie/showimage.html', context = context)
 

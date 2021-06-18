@@ -9,7 +9,7 @@ django-appconf==1.0.4
 django-imagekit==4.0.2
 future==0.18.2
 idna==2.10
-JPype1 @ file:///C:/Users/chase/Downloads/JPype1-1.2.0-cp39-cp39-win_amd64.whl
+JPype1 @ file:///C:\Users\chase\OneDrive\2021project\JPype1-1.3.0-cp39-cp39-win_amd64.whl
 konlpy==0.5.2
 lxml==4.6.3
 mysql-connector-python==8.0.25
@@ -50,7 +50,7 @@ django-appconf==1.0.4
 django-imagekit==4.0.2
 future==0.18.2
 idna==2.10
-JPype1 @ file:///C:/Users/chase/Downloads/JPype1-1.2.0-cp39-cp39-win_amd64.whl
+JPype1 @ file:///C:\Users\chase\OneDrive\2021project\JPype1-1.3.0-cp39-cp39-win_amd64.whl
 konlpy==0.5.2
 lxml==4.6.3
 mysql-connector-python==8.0.25
@@ -91,7 +91,7 @@ django-appconf==1.0.4
 django-imagekit==4.0.2
 future==0.18.2
 idna==2.10
-JPype1 @ file:///C:/Users/chase/Downloads/JPype1-1.2.0-cp39-cp39-win_amd64.whl
+JPype1 @ file:///C:\Users\chase\OneDrive\2021project\JPype1-1.3.0-cp39-cp39-win_amd64.whl
 konlpy==0.5.2
 lxml==4.6.3
 mysql-connector-python==8.0.25

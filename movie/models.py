@@ -11,10 +11,11 @@ class Movie(models.Model):
     mvName = models.CharField(max_length=200, null=True)
     mvData = models.TextField(null=True)
     mvYear = models.CharField(max_length=20, null=True)
-    mvPoster = models.ImageField(upload_to='media/poster', null=True)
-    mvcloud = models.ImageField(upload_to='media/cloudimg', null=True)
+    mvPoster = models.TextField(null=True)
+    mvcloud = models.TextField(null=True)
     mv_createdate = models.DateField(default=timezone.now)
-    mvLocation = models.FileField(storage=FileSystemStorage(location=settings.MEDIA_ROOT), upload_to='crawldata', default='settings.MEDIA_ROOT/crawldata/anonymous.jpg')
-
+    mvLocation = models.TextField(null=True)
+    cldImgPath = models.TextField(null=True)
+    pstImgPath = models.TextField(null=True)
     def __str__(self):
         return self.mvId
