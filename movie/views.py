@@ -82,8 +82,8 @@ def search(request):
             encText = urllib.parse.quote("{}".format(q))
             url = "https://openapi.naver.com/v1/search/movie?query=" + encText  # json 결과
             movie_api_request = urllib.request.Request(url)
-            movie_api_request.add_header("X-Naver-Client-Id", "tEzvl3Zbb_YdGSpp7hYv")
-            movie_api_request.add_header("X-Naver-Client-Secret", "r3fyE410yt")
+            movie_api_request.add_header("X-Naver-Client-Id", "")
+            movie_api_request.add_header("X-Naver-Client-Secret", "")
             response = urllib.request.urlopen(movie_api_request)
             rescode = response.getcode()
             if (rescode == 200):
